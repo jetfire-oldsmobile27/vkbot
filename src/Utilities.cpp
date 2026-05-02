@@ -4,7 +4,7 @@
  *
  */
 
-#include "Utilities.hpp"
+#include "vkbot/Utilities.hpp"
 
 #include <array>
 #include <cctype>

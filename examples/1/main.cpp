@@ -1,5 +1,5 @@
 #include <iostream>
-#include "BotBase.hpp"
+#include "vkbot/BotBase.hpp"
 
 
 

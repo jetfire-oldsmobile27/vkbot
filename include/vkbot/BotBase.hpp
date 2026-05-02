@@ -11,7 +11,7 @@
 #include <optional>
 #include <string>
 
-#include "ClientBase.hpp"
+#include "vkbot/ClientBase.hpp"
 
 namespace vk::bot {
 

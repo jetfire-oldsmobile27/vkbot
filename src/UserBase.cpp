@@ -4,7 +4,7 @@
  *
  */
 
-#include "UserBase.hpp"
+#include "vkbot/UserBase.hpp"
 
 #include <iostream>
 
