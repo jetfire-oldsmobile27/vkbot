@@ -1,0 +1,15 @@
+[requires]
+boost/1.89.0
+openssl/3.6.0
+nlohmann_json/3.12.0
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
+
+[options]
+boost/*:without_python=True
+boost/*:without_test=True
