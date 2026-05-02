@@ -18,7 +18,7 @@ class VKbotConan(ConanFile):
     def requirements(self):
         self.requires("boost/1.89.0")
         self.requires("openssl/3.6.0")
-        self.requires("nlohmann_json/3.12.0")
+        self.requires("nlohmann_json/3.11.3")
 
     def source(self):
         get(self,
