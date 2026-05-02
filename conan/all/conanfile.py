@@ -6,7 +6,7 @@ import os
 class VKbotConan(ConanFile):
     name = "vkbot"
     version = "0.1.0"
-    url = "https://github.com/jetfire-oldsmobile27/"
+    url = "https://github.com/jetfire-oldsmobile27/vkbot"
     description = "C++17 ВКонтакте library"
     license = "Apache-2.0"
     settings = "os", "compiler", "build_type", "arch"
@@ -22,7 +22,7 @@ class VKbotConan(ConanFile):
 
     def source(self):
         get(self,
-            "https://github.com/jetfire-oldsmobile27/",
+            "https://github.com/jetfire-oldsmobile27/vkbot/archive/refs/heads/main.zip",
             strip_root=True)
 
     def generate(self):
