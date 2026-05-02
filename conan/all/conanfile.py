@@ -46,7 +46,7 @@ class VKbotConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["vkbot"]
-        self.cpp_info.includedirs = ["include/vkbot"]
+        self.cpp_info.includedirs = ["include"]
         self.cpp_info.set_property("cmake_file_name",   "VKBOT")
         self.cpp_info.set_property("cmake_target_name", "vkbot::vkbot")
         self.cpp_info.requires = [

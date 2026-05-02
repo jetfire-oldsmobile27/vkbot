@@ -25,7 +25,7 @@ add_library(vkbot STATIC ${VKBOT_SOURCES} ${VKBOT_HEADERS})
 target_include_directories(vkbot
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/vkbot>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 if(TARGET boost::boost)
@@ -51,8 +51,8 @@ target_link_libraries(vkbot
 install(TARGETS vkbot EXPORT VKBOTTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
-install(FILES ${VKBOT_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vkbot
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/vkbot
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 configure_package_config_file(
