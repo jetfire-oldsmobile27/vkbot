@@ -19,7 +19,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 
-#include "vkbot/Exceptions.hpp"
+#include <vkbot/Exceptions.hpp>
 
 namespace vk::http {
 

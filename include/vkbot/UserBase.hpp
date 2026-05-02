@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-#include "vkbot/ClientBase.hpp"
+#include <vkbot/ClientBase.hpp>
 
 namespace vk::user {
 

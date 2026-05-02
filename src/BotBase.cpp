@@ -3,7 +3,7 @@
  * @version 0.1.0
  */
 
-#include "vkbot/BotBase.hpp"
+#include <vkbot/BotBase.hpp>
 
 #include <cassert>
 #include <unordered_map>

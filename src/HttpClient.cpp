@@ -4,7 +4,7 @@
  *
  */
 
-#include "vkbot/HttpClient.hpp"
+#include <vkbot/HttpClient.hpp>
 
 #include <boost/asio/ssl/host_name_verification.hpp>
 

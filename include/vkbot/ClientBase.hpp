@@ -14,10 +14,10 @@
 #include <string>
 #include <string_view>
 
-#include "vkbot/Exceptions.hpp"
-#include "vkbot/HttpClient.hpp"
-#include "vkbot/Types.hpp"
-#include "vkbot/Utilities.hpp"
+#include <vkbot/Exceptions.hpp>
+#include <vkbot/HttpClient.hpp>
+#include <vkbot/Types.hpp>
+#include <vkbot/Utilities.hpp>
 
 namespace vk::base {
 
