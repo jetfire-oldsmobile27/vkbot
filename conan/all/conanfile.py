@@ -16,7 +16,7 @@ class VKbotConan(ConanFile):
     generators = "CMakeDeps"
 
     def requirements(self):
-        self.requires("boost/1.89.0")
+        self.requires("boost/1.83.0")
         self.requires("openssl/3.6.0")
         self.requires("nlohmann_json/3.11.3")
 
