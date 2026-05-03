@@ -1,7 +1,17 @@
 <p align="center">
   <img src="./res/img/vkbot.png" alt="VKBOT Banner" width="600" height="200"/>
 </p>
-
+<p align="left">
+  <a href="https://github.com/jetfire-oldsmobile27/vkbot/actions">
+    <img src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" alt="Build Status">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-Apache%202.0-orange?style=flat-square" alt="License">
+  </a>
+  <img src="https://img.shields.io/badge/C%2B%2B-20-blue?style=flat-square&logo=c%2B%2B" alt="C++17">
+  <img src="https://img.shields.io/badge/Boost-1.83+-green?style=flat-square&logo=boost" alt="Boost">
+  <img src="https://img.shields.io/badge/Conan-2.25-cyan?style=flat-square&logo=conan" alt="Conan">
+</p>
 
 # VKBOT (boost-based)
 
