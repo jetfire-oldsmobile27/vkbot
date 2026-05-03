@@ -3,7 +3,7 @@
  Переработка оригинальной библиотеки [qucals/VKAPI](https://github.com/qucals/VK-API). Убраны все сырые указатели и CURL,
 транспортный слой переведён на **Boost.Beast + Boost.Asio**.
 
-## Сборка через Conan + CMake
+## Сборка с примерами через Conan + CMake
 
 ```bash
 # 1. Установить зависимости
@@ -23,7 +23,7 @@ cmake --install build --prefix /usr/local
 ## Быстрый старт — бот
 
 ```cpp
-#include "BotBase.hpp"
+#include <vkbot/BotBase.hpp>
 
 vk::bot::BotBase bot("your_group_id");
 bot.auth("your_token");
@@ -39,7 +39,7 @@ while (true) {
 ## Быстрый старт — пользователь
 
 ```cpp
-#include "UserBase.hpp"
+#include <vkbot/UserBase.hpp>
 
 vk::user::UserBase user("app_id", "app_secret");
 user.auth("access_token");
