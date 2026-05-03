@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="./res/img/vkbot.png" alt="VKBOT Banner" width="600" height="200"/>
+</p>
+
+
 # VKBOT (boost-based)
 
  Переработка оригинальной библиотеки [qucals/VKAPI](https://github.com/qucals/VK-API). Убраны все сырые указатели и CURL,
