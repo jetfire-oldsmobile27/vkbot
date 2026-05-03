@@ -1,8 +1,8 @@
 /**
  * @file HttpClient.hpp
  * @brief HTTPS-клиент на Boost.Beast + Boost.Asio.
- *
  * @version 0.1.0
+ *
  */
 
 #pragma once
@@ -37,10 +37,9 @@ using     tcp   = basio::ip::tcp;
  */
 class HttpClient final {
 public:
-    static constexpr std::uint16_t kHttpsPort    = 443;
-    static constexpr int           kHttpVersion  = 11;   // HTTP/1.1
-    static constexpr auto          kTimeout      = std::chrono::seconds(30);
-    static constexpr std::string_view kUserAgent = "VKbot/0.1.0";
+    static constexpr int              kHttpVersion = 11;
+    static constexpr auto             kTimeout     = std::chrono::seconds(35);
+    static constexpr std::string_view kUserAgent   = "VKbot/0.1.0";
 
     HttpClient();
 
@@ -68,11 +67,10 @@ public:
      * @return Тело HTTP-ответа в виде строки.
      * @throws vk::ex::NetworkException при сетевых ошибках.
      */
-    [[nodiscard]] std::string get(std::string_view host,
+                                   [[nodiscard]] std::string get(std::string_view host,
                                   std::string_view target);
 
 private:
-    /// Внутренний рабочий метод — общая логика для GET и POST.
     [[nodiscard]] std::string execute(bhttp::request<bhttp::string_body>& req,
                                       std::string_view host);
 
