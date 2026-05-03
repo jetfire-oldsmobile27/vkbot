@@ -1,4 +1,4 @@
-# VK API — Boost rewrite (C++17)
+# VKBOT (boost-based)
 
  Переработка оригинальной библиотеки [qucals/VKAPI](https://github.com/qucals/VK-API). Убраны все сырые указатели и CURL,
 транспортный слой переведён на **Boost.Beast + Boost.Asio**.
