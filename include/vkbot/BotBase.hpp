@@ -182,6 +182,7 @@ protected:
 
 private:
     [[nodiscard]] static Event parse_event_type(std::string_view type_str) noexcept;
+    void refresh_long_poll_server();
 
     std::string m_group_id;
     std::string m_access_token;

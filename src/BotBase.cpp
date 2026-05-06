@@ -63,53 +63,69 @@ bool BotBase::auth(const std::string& access_token) {
 BotBase::EventData BotBase::wait_for_event() {
     if (!m_authorized) {
         throw ex::NotConnectedException{};
-    };
+    }
 
-    auto& logger = utilities::Logger::instance();
-    logger.debug("BotBase::wait_for_event", "запрос к Lp server ts=" + m_timestamp);
+    while (true) {  // повторяем при неудачах (failed=1,2,3)
+        const std::string query =
+            "key="   + m_secret_key +
+            "&ts="   + m_timestamp  +
+            "&wait=" + m_time_wait  +
+            "&act=a_check";
 
-    const std::string query =
-        "key="   + m_secret_key +
-        "&ts="   + m_timestamp  +
-        "&wait=" + m_time_wait  +
-        "&act=a_check";
-
-    std::string host, path;
-    {
-        std::string_view sv = m_server_url;
-        if (sv_starts_with(sv, "https://")) {
-            sv.remove_prefix(8);
-        } else if (sv_starts_with(sv, "http://"))  {
-        sv.remove_prefix(7);
+        std::string host, path;
+        {
+            std::string_view sv = m_server_url;
+            if (sv_starts_with(sv, "https://")) {
+                sv.remove_prefix(8);
+            } else if (sv_starts_with(sv, "http://")) {
+                sv.remove_prefix(7);
+            }
+            const auto slash = sv.find('/');
+            if (slash == std::string_view::npos) {
+                host = std::string(sv);
+                path = "/";
+            } else {
+                host = std::string(sv.substr(0, slash));
+                path = std::string(sv.substr(slash));
+            }
         }
-        const auto slash = sv.find('/');
-        if (slash == std::string_view::npos) {
-            host = std::string(sv);
-            path = "/";
-        } else {
-            host = std::string(sv.substr(0, slash));
-            path = std::string(sv.substr(slash));
+        path += '?' + query;
+
+        const std::string raw      = m_http.get(host, path);
+        base::JsonType    response = base::JsonType::parse(raw);
+
+        auto& logger = utilities::Logger::instance();
+
+        // Обработка failed кодов Long Poll
+        if (response.contains("failed")) {
+            int failed_code = response["failed"].get<int>();
+            if (failed_code == 1) {
+                logger.warning("BotBase::wait_for_event", "таймаут Long Poll (failed=1), повторяем запрос");
+                continue; 
+            } else if (failed_code == 2 || failed_code == 3) {
+                logger.warning("BotBase::wait_for_event", "устарел ключ или потеряны данные (failed=" + std::to_string(failed_code) + "), перезапрашиваем сервер");
+                refresh_long_poll_server();
+                continue; 
+            } else {
+                logger.error("BotBase::wait_for_event", "неизвестный failed код: " + std::to_string(failed_code));
+                return {Event::Unknown, base::JsonType{}};
+            }
         }
+
+        if (response.contains("ts")) {
+            m_timestamp = response["ts"].get<std::string>();
+        }
+
+        if (!response.contains("updates") || !response["updates"].is_array() || response["updates"].empty()) {
+            logger.debug("BotBase::wait_for_event", "нет обновлений");
+            continue;  // нет событий, но соединение живое – продолжаем ждать
+        }
+
+        base::JsonType update    = response["updates"][0];
+        const auto     event_type = parse_event_type(update.at("type").get<std::string>());
+        logger.info("BotBase::wait_for_event", "получено событие: " + update.at("type").get<std::string>());
+        return {event_type, std::move(update)};
     }
-    path += '?' + query;
-
-    const std::string  raw      = m_http.get(host, path);
-    base::JsonType     response = base::JsonType::parse(raw);
-
-    logger.debug("BotBase::wait_for_event", "получен ответ: " + raw.substr(0, 300));
-
-    if (response.contains("ts")) {
-        m_timestamp = response["ts"].get<std::string>();
-    }
-
-    if (!response.contains("updates") || !response["updates"].is_array()  || response["updates"].empty()) {
-        logger.info("BotBase::wait_for_event", "получено событие: " + response["updates"][0].at("type").get<std::string>());
-        return {Event::Unknown, base::JsonType{}};
-    }
-
-    base::JsonType update    = response["updates"][0];
-    const auto     event_type = parse_event_type(update.at("type").get<std::string>());
-    return {event_type, std::move(update)};
 }
 
 
@@ -327,6 +343,32 @@ BotBase::Event BotBase::parse_event_type(std::string_view type_str) noexcept {
     if (const auto it = kMap.find(std::string(type_str)); it != kMap.end())
         return it->second;
     return Event::Unknown;
+}
+
+void BotBase::refresh_long_poll_server() {
+    auto& logger = utilities::Logger::instance();
+    logger.info("BotBase::refresh_long_poll_server", "перезапрос Long Poll сервера");
+    
+    const base::JsonType params = {
+        {"access_token", m_access_token},
+        {"group_id",     m_group_id},
+        {"v",            std::string(base::VKBOT_API_VERSION)},
+    };
+    const std::string target = std::string(base::VKBOT_API_METHOD_PFX) + method_to_string(Method::GetLongPollServer);
+    const std::string raw = m_http.post(std::string(base::VKBOT_API_HOST), target, params_to_query(params));
+    const base::JsonType response = base::JsonType::parse(raw);
+    
+    if (response.contains("error")) {
+        logger.error("BotBase::refresh_long_poll_server", "ошибка: " + response["error"].dump());
+        throw ex::AuthFailedException("Не удалось обновить Long Poll сервер");
+    }
+    
+    const auto& r = response.at("response");
+    m_secret_key = r.at("key").get<std::string>();
+    m_server_url = r.at("server").get<std::string>();
+    m_timestamp  = r.at("ts").get<std::string>();
+    
+    logger.debug("BotBase::refresh_long_poll_server", "новый server=" + m_server_url + " key=" + m_secret_key + " ts=" + m_timestamp);
 }
 
 } // namespace vk::bot
