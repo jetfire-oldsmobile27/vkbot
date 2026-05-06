@@ -3,6 +3,7 @@
  * @version 0.1.0
  */
 
+ #include <vkbot/Utilities.hpp>
 #include <vkbot/ClientBase.hpp>
 
 #include <numeric>
@@ -54,7 +55,10 @@ std::string ClientBase::params_to_query(const JsonType& params) {
 
 
 VkErrorCode ClientBase::parse_error_code(const JsonType& response) {
-    if (!response.contains("error")) return VkErrorCode::Others;
+    if (!response.contains("error")) {
+        utilities::Logger::instance().error("BotBase::send_request", "ошибка VK API: " + response["error"].dump());
+        return VkErrorCode::Others;
+    }
 
     const auto& err = response["error"];
     int code = 0;

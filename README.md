@@ -40,6 +40,7 @@ cmake --install build --prefix /usr/local
 ```cpp
 #include <vkbot/BotBase.hpp>
 
+vk::utilities::Logger::instance().set_level(vk::utilities::LogLevel::Debug);
 vk::bot::BotBase bot("your_group_id");
 bot.auth("your_token");
 

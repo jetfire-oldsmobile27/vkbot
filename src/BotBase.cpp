@@ -3,6 +3,7 @@
  * @version 0.1.0
  */
 
+#include <vkbot/Utilities.hpp>
 #include <vkbot/BotBase.hpp>
 
 #include <cassert>
@@ -26,7 +27,8 @@ BotBase::BotBase(std::string group_id, std::string time_wait)
 bool BotBase::auth(const std::string& access_token) {
     if (m_authorized)         {throw ex::AlreadyConnectedException{};};
     if (access_token.empty()) {throw ex::EmptyArgumentException{};};
-
+    auto& logger = utilities::Logger::instance();
+    logger.info("BotBase::auth", "попытка авторизации с group_id=" + m_group_id);
     m_access_token = access_token;
 
     const base::JsonType params = {
@@ -40,10 +42,11 @@ bool BotBase::auth(const std::string& access_token) {
 
     const std::string raw = m_http.post(
         std::string(base::VKBOT_API_HOST), target, params_to_query(params));
-
+    logger.debug("BotBase::auth", "сырой ответ сервера: " + raw.substr(0, 300));
     const base::JsonType response = base::JsonType::parse(raw);
 
     if (response.contains("error")) {
+        logger.error("BotBase::auth", "ошибка авторизации: " + response["error"].dump());
         throw ex::AuthFailedException(response["error"].dump());
     }
 
@@ -52,7 +55,7 @@ bool BotBase::auth(const std::string& access_token) {
     m_server_url  = r.at("server").get<std::string>();
     m_timestamp   = r.at("ts").get<std::string>();
     m_authorized  = true;
-
+    logger.info("BotBase::auth", "успешно, получен server=" + m_server_url + " key=" + m_secret_key + " ts=" + m_timestamp);
     return true;
 }
 
@@ -61,6 +64,9 @@ BotBase::EventData BotBase::wait_for_event() {
     if (!m_authorized) {
         throw ex::NotConnectedException{};
     };
+
+    auto& logger = utilities::Logger::instance();
+    logger.debug("BotBase::wait_for_event", "запрос к Lp server ts=" + m_timestamp);
 
     const std::string query =
         "key="   + m_secret_key +
@@ -90,11 +96,14 @@ BotBase::EventData BotBase::wait_for_event() {
     const std::string  raw      = m_http.get(host, path);
     base::JsonType     response = base::JsonType::parse(raw);
 
+    logger.debug("BotBase::wait_for_event", "получен ответ: " + raw.substr(0, 300));
+
     if (response.contains("ts")) {
         m_timestamp = response["ts"].get<std::string>();
     }
 
     if (!response.contains("updates") || !response["updates"].is_array()  || response["updates"].empty()) {
+        logger.info("BotBase::wait_for_event", "получено событие: " + response["updates"][0].at("type").get<std::string>());
         return {Event::Unknown, base::JsonType{}};
     }
 

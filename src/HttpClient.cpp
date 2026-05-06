@@ -3,6 +3,7 @@
  *
  */
 
+#include <vkbot/Utilities.hpp>
 #include <vkbot/HttpClient.hpp>
 #include <boost/asio/ssl/host_name_verification.hpp>
 
@@ -47,6 +48,10 @@ std::string HttpClient::get(std::string_view host,
 std::string HttpClient::execute(bhttp::request<bhttp::string_body>& req,
                                 std::string_view                    host)
 try {
+    auto& logger = utilities::Logger::instance();
+    std::string target_str(req.target());
+    logger.debug("HttpClient", "POST " + std::string(host) + target_str + " body_len=" + std::to_string(req.body().size()));
+
     // Сбрасываем stopped-состояние io_context перед каждым запросом
     m_ioc.restart();
 
@@ -77,6 +82,13 @@ try {
     beast::flat_buffer                  buffer;
     bhttp::response<bhttp::string_body> res;
     bhttp::read(stream, buffer, res);
+
+    logger.debug("HttpClient", "response status=" + std::to_string(res.result_int()) + " body_len=" + std::to_string(res.body().size()));
+
+    if (logger.level() >= utilities::LogLevel::Debug) {
+        std::string preview = res.body().substr(0, 200);
+        logger.debug("HttpClient", "response body preview: " + preview);
+    }
 
     boost::system::error_code shutdown_ec;
     stream.shutdown(shutdown_ec);
