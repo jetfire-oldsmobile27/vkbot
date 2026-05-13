@@ -52,9 +52,6 @@ try {
     std::string target_str(req.target());
     logger.debug("HttpClient", "POST " + std::string(host) + target_str + " body_len=" + std::to_string(req.body().size()));
 
-    // Сбрасываем stopped-состояние io_context перед каждым запросом
-    m_ioc.restart();
-
     const std::string host_str(host);
 
     tcp::resolver resolver{m_ioc};
@@ -69,7 +66,7 @@ try {
                                      basio::error::get_ssl_category()};
         throw ex::NetworkException(ec.message());
     }
-
+    
     beast::get_lowest_layer(stream).expires_after(kTimeout);
     beast::get_lowest_layer(stream).connect(endpoints);
 
@@ -91,7 +88,10 @@ try {
     }
 
     boost::system::error_code shutdown_ec;
-    stream.shutdown(shutdown_ec);
+    auto shutdown_err = stream.shutdown(shutdown_ec);
+    if(shutdown_err.failed()) {
+        logger.error("HttpClient",  shutdown_err.message());
+    }
 
     return res.body();
 }
