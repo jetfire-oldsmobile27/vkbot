@@ -10,6 +10,7 @@
 #include <future>
 #include <optional>
 #include <string>
+#include <atomic>
 
 #include <vkbot/ClientBase.hpp>
 
@@ -146,12 +147,42 @@ public:
     // Bot-specific API
     // -----------------------------------------------------------------------
 
+
+    /**
+    * @brief Блокирует поток до поступления события от Long Poll сервера.
+    *
+    * @param ec  Устанавливается в boost::asio::error::operation_aborted
+    *            при прерывании через interrupt(). При успехе — очищается.
+    *            При прерывании возвращает EventData{Event::Unknown, {}}.
+    * @throws ex::NotConnectedException если не авторизован.
+    */
+    [[nodiscard]] EventData wait_for_event(boost::system::error_code& ec);
+
     /**
      * @brief Блокирует поток до поступления события от Long Poll сервера.
      * @return EventData с типом и JSON-телом события.
      * @throws ex::NotConnectedException если не авторизован.
      */
     [[nodiscard]] EventData wait_for_event();
+
+    /**
+    * @brief Прерывает текущий (или следующий) вызов wait_for_event().
+    *
+    * Потокобезопасно. Вызов из любого потока немедленно будит заблокированный
+    * wait_for_event(): оригинальный overload бросает ex::InterruptedException,
+    * overload с error_code устанавливает boost::asio::error::operation_aborted.
+    *
+    * Для возобновления работы вызвать reset_interrupt().
+    */
+    void interrupt();
+
+    /**
+    * @brief Сбрасывает флаг прерывания после interrupt().
+    *
+    * Необходимо вызвать перед следующим wait_for_event() чтобы
+    * продолжать принимать события.
+    */
+    void reset_interrupt();
 
     /**
      * @brief Отправить запрос по enum-методу.
@@ -192,6 +223,7 @@ private:
     std::string m_server_url;
     std::string m_secret_key;
     std::string m_timestamp;
+    std::atomic<bool> m_interrupted{false};
 };
 
 } // namespace vk::bot

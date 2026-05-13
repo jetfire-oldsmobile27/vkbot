@@ -67,8 +67,22 @@ public:
      * @return Тело HTTP-ответа в виде строки.
      * @throws vk::ex::NetworkException при сетевых ошибках.
      */
-                                   [[nodiscard]] std::string get(std::string_view host,
+    [[nodiscard]] std::string get(std::string_view host,
                                   std::string_view target);
+
+    /**
+     * @brief Отменяет текущий запрос (если есть).
+     *
+     * Потокобезопасно. Разблокирует execute() с ошибкой
+     * boost::asio::error::operation_aborted.
+     */
+    void cancel();
+    
+    /**
+     * @brief Сбрасывает флаг отмены. Вызывать перед следующим запросом.
+     *
+     */
+    void reset_cancel();
 
 private:
     [[nodiscard]] std::string execute(bhttp::request<bhttp::string_body>& req,
@@ -76,6 +90,9 @@ private:
 
     basio::io_context m_ioc;
     bssl::context     m_ssl_ctx;
+    std::atomic<bool>              m_cancelled{false};
+    std::mutex                     m_socket_mutex;
+    boost::asio::ip::tcp::socket*  m_active_socket{nullptr};
 };
 
 } // namespace vk::http

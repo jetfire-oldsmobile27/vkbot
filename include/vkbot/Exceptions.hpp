@@ -58,4 +58,11 @@ public:
     {}
 };
 
+class InterruptedException final : public VKbotException {
+public:
+    explicit InterruptedException(const std::string& detail)
+        : VKbotException("Операция прервана: " + detail)
+    {}
+};
+
 } // namespace vk::ex
