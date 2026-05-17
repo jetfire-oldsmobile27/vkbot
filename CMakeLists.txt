@@ -9,10 +9,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_EXAMPLES "Build examples" OFF)
 
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED filesystem system)
 find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
@@ -45,6 +45,7 @@ target_link_libraries(vkbot
         ${_BOOST_TARGET}
         ${_OPENSSL_TARGET}
         nlohmann_json::nlohmann_json
+        Boost::filesystem
 )
 
 # ---------- install ----------
