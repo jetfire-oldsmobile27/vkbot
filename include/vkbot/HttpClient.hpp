@@ -45,8 +45,8 @@ public:
 
     HttpClient(const HttpClient&)            = delete;
     HttpClient& operator=(const HttpClient&) = delete;
-    HttpClient(HttpClient&&)                 = default;
-    HttpClient& operator=(HttpClient&&)      = default;
+    HttpClient(HttpClient&&)                 = delete;
+    HttpClient& operator=(HttpClient&&)      = delete;
 
     /**
      * @brief Выполняет HTTPS POST запрос.
@@ -59,6 +59,20 @@ public:
     [[nodiscard]] std::string post(std::string_view host,
                                    std::string_view target,
                                    std::string_view body);
+
+    /**
+    * @brief Выполняет HTTPS POST запрос с телом multipart/form-data.
+    * @param host     Хост без схемы.
+    * @param target   Путь.
+    * @param boundary Строка-граница для multipart.
+    * @param body     Сформированное multipart тело.
+    * @return Тело HTTP-ответа.
+    * @throws vk::ex::NetworkException при ошибках.
+    */
+    [[nodiscard]] std::string post_multipart(std::string_view host,
+                                            std::string_view target,
+                                            std::string_view boundary,
+                                            std::string_view body);
 
     /**
      * @brief Выполняет HTTPS GET запрос.

@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include "vkbot/Types.hpp"
 #include <future>
-#include <optional>
 #include <string>
 #include <atomic>
 
@@ -40,6 +40,7 @@ public:
         IsMember,
         SetLongPollSettings,
         SetSettings,
+        MarkAsRead, 
         CreateChat,
         DeleteMessage,
         DeleteChatPhoto,
@@ -207,6 +208,35 @@ public:
 
     /// Конвертирует enum метода в строку VK API.
     [[nodiscard]] static std::string method_to_string(Method method);
+
+    /// Методы для упрощенного взаимодействия с VK
+    
+    //base::JsonType send_photo_request();
+
+     /**
+     * @brief Отправка файла на сервер
+     * @returns Ответ файлового сервера
+     */
+    base::JsonType send_file_request(const std::string& url,
+                                     const std::string& filePath,
+                                     const std::string& fieldName);
+
+    /**
+    * @brief Отправка данных на сервер как файла.
+    * @param url       Адрес загрузки.
+    * @param data      Бинарные данные файла.
+    * @param filename  Имя файла (для поля filename).
+    * @param fieldName Имя поля в multipart.
+    * @param mime_type MIME-тип (по умолчанию application/octet-stream).
+    * @return Ответ сервера в JSON.
+    */
+    base::JsonType send_file_request(const std::string& url,
+                                 const unsigned char* data,
+                                 size_t size,
+                                 const std::string& filename,
+                                 const std::string& fieldName,
+                                 const std::string& mime_type = "application/octet-stream");
+
 
 protected:
     [[nodiscard]] base::JsonType fill_required_params(const base::JsonType& params) const override;
