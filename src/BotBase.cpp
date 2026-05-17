@@ -12,6 +12,7 @@
 #include <vkbot/BotBase.hpp>
 #include <vkbot/Utilities.hpp>
 
+#include "vkbot/Exceptions.hpp"
 #include "vkbot/Types.hpp"
 
 static inline bool sv_starts_with(std::string_view s,
@@ -329,6 +330,138 @@ base::JsonType BotBase::send_file_request(const std::string& url,
     throw ex::JsonParseException(std::string("Failed to parse JSON: ") +
                                  e.what());
   }
+}
+
+std::string BotBase::upload_photo(int64_t peer_id, const std::string& filePath) {
+    base::JsonType params;
+    params["peer_id"] = std::to_string(peer_id);
+    auto upload_server = send_request("photos.getMessagesUploadServer", params);
+    if (upload_server.contains("error")) {
+        throw ex::VKbotException("Failed to get upload server: " + upload_server["error"].dump());
+    }
+    if (!upload_server.contains("response") || !upload_server["response"].contains("upload_url")) {
+        throw ex::VKbotException("Invalid upload server response: " + upload_server.dump());
+    }
+    std::string upload_url = upload_server["response"]["upload_url"].get<std::string>();
+
+    base::JsonType upload_response = send_file_request(upload_url, filePath, "photo");
+    if (!upload_response.contains("photo") || !upload_response.contains("server") || !upload_response.contains("hash")) {
+        throw ex::VKbotException("Invalid upload response: " + upload_response.dump());
+    }
+
+    base::JsonType save_params;
+    save_params["photo"] = upload_response["photo"].is_string()
+        ? upload_response["photo"].get<std::string>()
+        : std::to_string(upload_response["photo"].get<int64_t>());
+    save_params["server"] = upload_response["server"].is_number()
+        ? std::to_string(upload_response["server"].get<int>())
+        : upload_response["server"].get<std::string>();
+    save_params["hash"] = upload_response["hash"].get<std::string>();
+
+    auto saved = send_request("photos.saveMessagesPhoto", save_params);
+    if (saved.contains("error")) {
+        throw ex::VKbotException("Failed to save photo: " + saved["error"].dump());
+    }
+    if (!saved.contains("response")) {
+        throw ex::VKbotException("No response in save photo result");
+    }
+
+    base::JsonType photo_info;
+    if (saved["response"].is_array() && !saved["response"].empty()) {
+        photo_info = saved["response"][0];
+    } else if (saved["response"].is_object()) {
+        photo_info = saved["response"];
+    } else {
+        throw ex::VKbotException("Unexpected response type in save photo: " + saved["response"].dump());
+    }
+
+    if (!photo_info.contains("owner_id") || !photo_info.contains("id")) {
+        throw ex::VKbotException("Missing owner_id or id in saved photo info");
+    }
+
+    int64_t owner_id = photo_info["owner_id"].is_number()
+        ? photo_info["owner_id"].get<int64_t>()
+        : std::stoll(photo_info["owner_id"].get<std::string>());
+    int64_t id = photo_info["id"].is_number()
+        ? photo_info["id"].get<int64_t>()
+        : std::stoll(photo_info["id"].get<std::string>());
+
+    return "photo" + std::to_string(owner_id) + "_" + std::to_string(id);
+}
+
+std::string BotBase::upload_photo(int64_t peer_id, const unsigned char* data, size_t size, const std::string& filename) {
+    base::JsonType params;
+    params["peer_id"] = std::to_string(peer_id);
+    auto upload_server = send_request("photos.getMessagesUploadServer", params);
+    if (upload_server.contains("error")) {
+        throw ex::VKbotException("Failed to get upload server: " + upload_server["error"].dump());
+    }
+    if (!upload_server.contains("response") || !upload_server["response"].contains("upload_url")) {
+        throw ex::VKbotException("Invalid upload server response: " + upload_server.dump());
+    }
+    std::string upload_url = upload_server["response"]["upload_url"].get<std::string>();
+
+    
+    base::JsonType upload_response = send_file_request(upload_url, data, size, filename, "photo", "image/jpeg");
+    if (!upload_response.contains("photo") || !upload_response.contains("server") || !upload_response.contains("hash")) {
+        throw ex::VKbotException("Invalid upload response: " + upload_response.dump());
+    }
+
+    base::JsonType save_params;
+    save_params["photo"] = upload_response["photo"].is_string()
+        ? upload_response["photo"].get<std::string>()
+        : std::to_string(upload_response["photo"].get<int64_t>());
+    save_params["server"] = upload_response["server"].is_number()
+        ? std::to_string(upload_response["server"].get<int>())
+        : upload_response["server"].get<std::string>();
+    save_params["hash"] = upload_response["hash"].get<std::string>();
+
+    auto saved = send_request("photos.saveMessagesPhoto", save_params);
+    if (saved.contains("error")) {
+        throw ex::VKbotException("Failed to save photo: " + saved["error"].dump());
+    }
+    if (!saved.contains("response")) {
+        throw ex::VKbotException("No response in save photo result");
+    }
+
+    base::JsonType photo_info;
+    if (saved["response"].is_array() && !saved["response"].empty())
+        photo_info = saved["response"][0];
+    else if (saved["response"].is_object())
+        photo_info = saved["response"];
+    else
+        throw ex::VKbotException("Unexpected response type in save photo");
+
+    int64_t owner_id = photo_info["owner_id"].is_number()
+        ? photo_info["owner_id"].get<int64_t>()
+        : std::stoll(photo_info["owner_id"].get<std::string>());
+    int64_t id = photo_info["id"].is_number()
+        ? photo_info["id"].get<int64_t>()
+        : std::stoll(photo_info["id"].get<std::string>());
+
+    return "photo" + std::to_string(owner_id) + "_" + std::to_string(id);
+}
+
+base::JsonType BotBase::send_photo(int64_t peer_id, const std::string& filePath, const std::string& caption) {
+    std::string attachment = upload_photo(peer_id, filePath);
+    base::JsonType params;
+    params["peer_id"] = std::to_string(peer_id);
+    params["attachment"] = attachment;
+    if (!caption.empty())
+        params["message"] = caption;
+    params["random_id"] = std::to_string(random_id());
+    return send_request(Method::SendMessage, params);
+}
+
+base::JsonType BotBase::send_photo(int64_t peer_id, const unsigned char* data, size_t size, const std::string& filename, const std::string& caption) {
+    std::string attachment = upload_photo(peer_id, data, size, filename);
+    base::JsonType params;
+    params["peer_id"] = std::to_string(peer_id);
+    params["attachment"] = attachment;
+    if (!caption.empty())
+        params["message"] = caption;
+    params["random_id"] = std::to_string(random_id());
+    return send_request(Method::SendMessage, params);
 }
 
 base::JsonType BotBase::fill_required_params(

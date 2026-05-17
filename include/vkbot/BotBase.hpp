@@ -210,8 +210,6 @@ public:
     [[nodiscard]] static std::string method_to_string(Method method);
 
     /// Методы для упрощенного взаимодействия с VK
-    
-    //base::JsonType send_photo_request();
 
      /**
      * @brief Отправка файла на сервер
@@ -237,6 +235,37 @@ public:
                                  const std::string& fieldName,
                                  const std::string& mime_type = "application/octet-stream");
 
+    /**
+     * @brief Загружает фото на сервер VK и возвращает attachment строку.
+     * @param peer_id ID получателя (для сообществ можно 0 или id диалога)
+     * @param filePath Путь к файлу изображения.
+     * @return Строка attachment (например "photo123_456").
+     * @throws ex::VkApiException при ошибках VK API.
+     */
+    [[nodiscard]] std::string upload_photo(int64_t peer_id, const std::string& filePath);
+
+    /**
+     * @brief Загружает фото из буфера в памяти.
+     * @param peer_id ID получателя.
+     * @param data    Указатель на бинарные данные изображения.
+     * @param size    Размер данных.
+     * @param filename Имя файла (для поля filename в multipart).
+     * @return Строка attachment.
+     */
+    [[nodiscard]] std::string upload_photo(int64_t peer_id, const unsigned char* data, size_t size, const std::string& filename);
+        /**
+     * @brief Отправляет сообщение с фото из файла.
+     * @param peer_id ID получателя.
+     * @param filePath Путь к файлу.
+     * @param caption Текст сообщения (опционально).
+     * @return JSON ответ VK API (результат messages.send).
+     */
+    [[nodiscard]] base::JsonType send_photo(int64_t peer_id, const std::string& filePath, const std::string& caption = "");
+
+    /**
+     * @brief Отправляет сообщение с фото из буфера.
+     */
+    [[nodiscard]] base::JsonType send_photo(int64_t peer_id, const unsigned char* data, size_t size, const std::string& filename, const std::string& caption = "");
 
 protected:
     [[nodiscard]] base::JsonType fill_required_params(const base::JsonType& params) const override;
