@@ -50,6 +50,7 @@ class VKbotConan(ConanFile):
         self.cpp_info.set_property("cmake_file_name",   "VKBOT")
         self.cpp_info.set_property("cmake_target_name", "vkbot::vkbot")
         self.cpp_info.requires = [
+            "boost::filesystem",
             "boost::system",
             "openssl::ssl",
             "openssl::crypto",
