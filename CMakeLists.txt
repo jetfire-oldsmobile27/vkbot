@@ -28,24 +28,13 @@ target_include_directories(vkbot
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-if(TARGET boost::boost)
-    set(_BOOST_TARGET boost::boost)
-else()
-    set(_BOOST_TARGET Boost::system)
-endif()
-
-if(TARGET openssl::openssl)
-    set(_OPENSSL_TARGET openssl::openssl)
-else()
-    set(_OPENSSL_TARGET OpenSSL::SSL OpenSSL::Crypto)
-endif()
-
 target_link_libraries(vkbot
     PUBLIC
-        ${_BOOST_TARGET}
-        ${_OPENSSL_TARGET}
-        nlohmann_json::nlohmann_json
         Boost::filesystem
+        Boost::boost
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        nlohmann_json::nlohmann_json
 )
 
 # ---------- install ----------
