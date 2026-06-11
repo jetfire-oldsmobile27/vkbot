@@ -75,12 +75,12 @@ BotBase::BotBase(std::string group_id, std::string time_wait)
     : m_group_id(std::move(group_id)), m_time_wait(std::move(time_wait)) {}
 
 bool BotBase::auth(const std::string& access_token) {
-  if (m_authorized) {
-    throw ex::AlreadyConnectedException{};
-  };
   if (access_token.empty()) {
     throw ex::EmptyArgumentException{};
   };
+  if (access_token != m_access_token) {
+    m_authorized = false;
+  }
   auto& logger = utilities::Logger::instance();
   logger.info("BotBase::auth", "попытка авторизации с group_id=" + m_group_id);
   m_access_token = access_token;
@@ -136,6 +136,13 @@ void BotBase::reset_interrupt() {
   m_http.reset_cancel();
 }
 
+void BotBase::reconnect() {
+  auto& logger = utilities::Logger::instance();
+  logger.info("BotBase::reconnect", "переподключение к Long Poll серверу");
+  m_authorized = false;
+  auth(m_access_token);
+}
+
 BotBase::EventData BotBase::wait_for_event(boost::system::error_code& ec) {
   ec.clear();
   if (!m_authorized) {
@@ -177,7 +184,6 @@ BotBase::EventData BotBase::wait_for_event(boost::system::error_code& ec) {
     try {
       raw = m_http.get(host, path);
     } catch (const ex::NetworkException& e) {
-      // Distinguish interruption (operation_aborted) from real errors
       const std::string msg = e.what();
       const bool is_abort = (msg.find("aborted") != std::string::npos) ||
                             (msg.find("cancel") != std::string::npos) ||
@@ -189,8 +195,16 @@ BotBase::EventData BotBase::wait_for_event(boost::system::error_code& ec) {
         ec = boost::asio::error::operation_aborted;
         return {Event::Unknown, base::JsonType{}};
       }
-      logger.error("BotBase::wait_for_event", "сетевая ошибка: " + msg);
-      throw;  // re-throw genuine network errors
+      logger.warning("BotBase::wait_for_event",
+                     "сетевая ошибка, переподключение: " + msg);
+      try {
+        refresh_long_poll_server();
+      } catch (const std::exception& re) {
+        logger.error("BotBase::wait_for_event",
+                     "не удалось переподключиться: " + std::string(re.what()));
+        throw;
+      }
+      continue;
     }
 
     // Re-check after the blocking call returns

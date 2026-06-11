@@ -131,9 +131,11 @@ public:
 
     /**
      * @brief Авторизация по токену сообщества.
-     * @throws ex::AlreadyConnectedException если уже авторизован.
-     * @throws ex::EmptyArgumentException    если токен пустой.
-     * @throws ex::AuthFailedException       при ошибке сервера.
+     *
+     * Повторный вызов перезапускает Long Poll-сессию (для reconnect).
+     *
+     * @throws ex::EmptyArgumentException если токен пустой.
+     * @throws ex::AuthFailedException    при ошибке сервера.
      */
     bool auth(const std::string& access_token) override;
 
@@ -184,6 +186,14 @@ public:
     * продолжать принимать события.
     */
     void reset_interrupt();
+
+    /**
+     * @brief Принудительно переподключается к Long Poll серверу.
+     *
+     * Сбрасывает текущую сессию и запрашивает новую у VK API.
+     * Вызывается автоматически при ошибках в wait_for_event().
+     */
+    void reconnect();
 
     /**
      * @brief Отправить запрос по enum-методу.
